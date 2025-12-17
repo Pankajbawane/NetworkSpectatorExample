@@ -1,0 +1,15 @@
+{
+  "originHash" : "6d2109d2f43eb2513b06e62143452b001ff756d14a9115e1fe7243a6591ba4af",
+  "pins" : [
+    {
+      "identity" : "networkspectator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Pankajbawane/NetworkSpectator.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "dc234d7f81fe89ebb36127d2843014d9a47634bc"
+      }
+    }
+  ],
+  "version" : 3
+}
