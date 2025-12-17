@@ -2,6 +2,8 @@
 
 This example app demonstrates how to integrate and use the NetworkSpectator library to observe, log, and inspect network activity across iOS and macOS. It includes a simple UI that triggers sample network calls and presents a built-in logging interface powered by NetworkSpectator.
 
+NetworkSpectator - https://github.com/Pankajbawane/NetworkSpectator
+
 ## Features
 
 - Simple SwiftUI interface to trigger mock/service calls
