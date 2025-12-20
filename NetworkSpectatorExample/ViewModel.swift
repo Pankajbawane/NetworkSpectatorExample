@@ -16,10 +16,10 @@ class ViewModel {
         // Call HTTP services to illustrate logging.
         
         makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/characters")
-        makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/books")
+        makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/houses")
         
         // This request will be ingored for logging. This illustrate Skip logging HTTP request.
-        makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/houses")
+        makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/ignore-this-one")
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
@@ -45,7 +45,7 @@ class ViewModel {
     
     // Example to skip logging HTTP request.
     func skipLogging() {
-        let rule = MatchRule.url("https://www.anapioficeandfire.com/api/houses")
+        let rule = MatchRule.url("https://www.anapioficeandfire.com/api/ignore-this-one")
         NetworkSpectator.ignoreLogging(for: rule)
     }
     
