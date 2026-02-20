@@ -53,7 +53,7 @@ class ViewModel {
     func registerMock() {
         let mockRule = MatchRule.url("https://mock.example.com/api/mock/1")
         do {
-            let mock = try Mock(rules: [mockRule], response: ["response": "this is a mock response"], statusCode: 200)
+            let mock = try Mock(rule: mockRule, response: ["response": "this is a mock response"], statusCode: 200)
             NetworkSpectator.registerMock(for: mock)
         } catch {
             print("mock failed")
