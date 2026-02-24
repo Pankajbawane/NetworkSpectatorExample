@@ -2,6 +2,10 @@
 //  NetworkSpectatorExampleApp.swift
 //  NetworkSpectatorExample
 //
+//  Example app demonstrating NetworkSpectator framework for iOS/macOS
+//  https://github.com/Pankajbawane/NetworkSpectator
+//  Features: HTTP request/response logging, mock responses, selective logging
+//
 //  Created by Pankaj Bawane on 17/12/25.
 //
 
