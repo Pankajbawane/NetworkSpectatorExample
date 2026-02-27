@@ -7,12 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E76365ED2F5163E200CC2DF4 /* ImageGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76365EC2F5163E200CC2DF4 /* ImageGridView.swift */; };
 		E7DD58D82EF31FF300DA3A26 /* NetworkSpectator in Frameworks */ = {isa = PBXBuildFile; productRef = E7DD58D72EF31FF300DA3A26 /* NetworkSpectator */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		E76365EC2F5163E200CC2DF4 /* ImageGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGridView.swift; sourceTree = "<group>"; };
 		E7DD58C82EF31FB700DA3A26 /* NetworkSpectatorExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetworkSpectatorExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -54,7 +52,6 @@
 			children = (
 				E7DD58CA2EF31FB700DA3A26 /* NetworkSpectatorExample */,
 				E7DD58C92EF31FB700DA3A26 /* Products */,
-				E76365EC2F5163E200CC2DF4 /* ImageGridView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -144,7 +141,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E76365ED2F5163E200CC2DF4 /* ImageGridView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
