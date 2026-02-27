@@ -182,10 +182,6 @@ struct ContentView: View {
             }
             .navigationTitle("NetworkSpectator")
         }
-        .onAppear {
-            viewModel.skipLogging()
-            viewModel.registerMock()
-        }
         #if os(iOS)
         .sheet(isPresented: $showLogs) {
             NetworkSpectator.rootView

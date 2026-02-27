@@ -26,7 +26,10 @@ class ViewModel {
         !characters.isEmpty || !houses.isEmpty || !images.isEmpty || !mockResponses.isEmpty || skippedRequestCount > 0
     }
     
-    init() { }
+    init() {
+        skipLogging()
+        registerMock()
+    }
     
     
     /// Calls HTTP services to  fetch data from servers.
