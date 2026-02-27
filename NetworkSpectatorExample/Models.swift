@@ -52,3 +52,8 @@ struct MockResponse: Decodable, Identifiable, Sendable {
     
     var id: String { response }
 }
+
+struct ImageItem: Decodable, Identifiable {
+    let id: String
+    let download_url: String
+}

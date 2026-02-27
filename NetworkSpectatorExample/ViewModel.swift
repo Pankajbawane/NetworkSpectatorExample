@@ -20,26 +20,46 @@ class ViewModel {
     var mockResponses: [MockResponse] = []
     var skippedRequestCount: Int = 0
     var isLoading: Bool = false
+    var totalRequests: Int = 0
+    var images: [ImageItem] = []
+    var dataReceived: Bool {
+        !characters.isEmpty || !houses.isEmpty || !images.isEmpty || !mockResponses.isEmpty || skippedRequestCount > 0
+    }
     
     init() { }
     
+    
+    /// Calls HTTP services to  fetch data from servers.
     func callServices() async {
         // Call HTTP services to illustrate logging with NetworkSpectator.
         isLoading = true
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                await self.makeRequest(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
+                await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
             }
             group.addTask {
-                await self.makeRequest(urlString: "http://covers.openlibrary.org/b/isbn/0385472579-S.jpg")
-            }
-            group.addTask {
-                await self.makeRequest(urlString: "http://some.unknown.url/for/intentional/error")
+                await self.makeRequestWithDefaultSession(urlString: "http://covers.openlibrary.org/b/isbn/0385472579-S.jpg")
             }
             
             group.addTask {
-                await self.makeRequest(urlString: "http://some.unknown.url/for/intentional/error")
+                await self.makeRequestWithDefaultSession(urlString: "http://some.unknown.url/for/intentional/error")
+            }
+            
+            group.addTask {
+                await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
+            }
+            
+            group.addTask {
+                let result: Result<[ImageItem], Error> = await self.makeRequestWithConfiguration(urlString: "https://picsum.photos/v2/list?page=2&limit=5")
+                switch result {
+                case .success(let image):
+                    await MainActor.run {
+                        self.images.append(contentsOf: image)
+                    }
+                case .failure(let error):
+                    print(error)
+                }
             }
             
             group.addTask { @MainActor in
@@ -57,7 +77,7 @@ class ViewModel {
             }
             
             group.addTask {
-                let result: Result<[Character], Error> = await self.makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/characters")
+                let result: Result<[Character], Error> = await self.makeRequestWithConfiguration(urlString: "https://www.anapioficeandfire.com/api/characters")
                 switch result {
                 case .success(let chars):
                     await MainActor.run {
@@ -81,7 +101,7 @@ class ViewModel {
             }
             
             group.addTask {
-                await self.makeRequest(urlString: "https://www.anapioficeandfire.com/api/ignore-this-one")
+                await self.makeRequestWithDefaultSession(urlString: "https://jsonplaceholder.typicode.com/users")
                 await MainActor.run {
                     self.skippedRequestCount += 1
                 }
@@ -91,13 +111,13 @@ class ViewModel {
         isLoading = false
     }
     
-    // Example to skip logging HTTP request.
+    /// Example to skip logging HTTP request.
     func skipLogging() {
-        let rule = MatchRule.url("https://www.anapioficeandfire.com/api/ignore-this-one")
+        let rule = MatchRule.url("https://jsonplaceholder.typicode.com/users")
         NetworkSpectator.ignoreLogging(for: rule)
     }
     
-    // Example to mock HTTP request.
+    /// Example to mock HTTP request.
     func registerMock() {
         let mockRule = MatchRule.url("https://mock.example.com/api/mock/1")
         do {
@@ -108,11 +128,16 @@ class ViewModel {
         }
     }
     
-    func makeRequest<T: Decodable>(urlString: String) async -> Result<T, Error> {
+    
+    /// Makes a network request with custom URLSession Configuration and decodes the response.
+    /// - Parameter urlString: URL.
+    /// - Returns: Response.
+    private func makeRequestWithConfiguration<T: Decodable>(urlString: String) async -> Result<T, Error> {
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
             return .failure(URLError(.badURL))
         }
+        totalRequests += 1
         let urlRequest = URLRequest(url: url)
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config)
@@ -125,27 +150,32 @@ class ViewModel {
         }
     }
     
-    func makeRequest(urlString: String) async {
+    /// Makes a network request with Shared URLSession and decodes the response.
+    /// - Parameter urlString: URL.
+    private func makeRequestWithDefaultSession(urlString: String) async {
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
             return
         }
+        totalRequests += 1
         let urlRequest = URLRequest(url: url)
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
         do {
-            _ = try await session.data(for: urlRequest)
+            _ = try await URLSession.shared.data(for: urlRequest)
         } catch {
             print(error)
         }
     }
     
-    func makeRequestWithCompletionHandler<T: Decodable>(urlString: String) async -> Result<T, Error> {
+    /// Makes a network request with Shared URLSession and Completion Handler and decodes the response.
+    /// - Parameter urlString: URL.
+    /// - Returns: Response.
+    private func makeRequestWithCompletionHandler<T: Decodable>(urlString: String) async -> Result<T, Error> {
         await withCheckedContinuation { continuation in
             guard let url = URL(string: urlString) else {
                 print("Invalid URL")
                 return continuation.resume(returning: .failure(URLError(.badURL)))
             }
+            totalRequests += 1
             let urlRequest = URLRequest(url: url)
             URLSession.shared.dataTask(with: urlRequest) { data, response, error in
                 

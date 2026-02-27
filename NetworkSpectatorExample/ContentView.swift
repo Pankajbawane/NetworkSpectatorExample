@@ -28,22 +28,25 @@ struct ContentView: View {
                 VStack(spacing: 10) {
                     Text("NetworkSpectator Example App")
                         .font(.headline)
+                        .fontDesign(.monospaced)
                     
                     VStack(spacing: 6) {
-                        Text("Monitor HTTP requests & responses in real-time. Features include logging, mocking, and selective request filtering.")
+                        Text("Monitor HTTP requests & responses in real-time. Features include intercepting, logging, mocking, selective request filtering and exporting.")
                             .font(.caption)
+                            .fontDesign(.monospaced)
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.center)
                         
-                        Text("Tap 'Call Services' to make HTTP requests. Tap 'Show Logs' to view NetworkSpectator UI.")
+                        Text("Tap 'Fetch Data' to make HTTP requests. Tap 'Show Logs' to launch NetworkSpectator UI.")
                             .font(.caption2)
+                            .fontDesign(.monospaced)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal)
                     
                     HStack {
-                        Button("Call Services") {
+                        Button("Fetch Data") {
                             Task {
                                 await viewModel.callServices()
                             }
@@ -59,18 +62,22 @@ struct ContentView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .padding(.top, 5)
-                    }
                 }
                 .padding()
                 
                 Divider()
+                HStack {
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                    Text("HTTP requests count: \(viewModel.totalRequests)")
+                        .font(Font.headline)
+                }
+                .padding(10)
+                Divider()
                 
                 // Data Display Section
-                if !viewModel.mockResponses.isEmpty || !viewModel.characters.isEmpty || !viewModel.houses.isEmpty || viewModel.skippedRequestCount > 0 {
+                if viewModel.dataReceived {
                     List {
                         
                         // Skipped Requests Section
@@ -102,8 +109,8 @@ struct ContentView: View {
                         
                         // Characters Section
                         if !viewModel.characters.isEmpty {
-                            Section("Characters (\(viewModel.characters.count))") {
-                                ForEach(viewModel.characters.prefix(10)) { character in
+                            Section("World of GoT - Characters (\(viewModel.characters.count))") {
+                                ForEach(viewModel.characters) { character in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(character.displayName)
                                             .font(.headline)
@@ -127,8 +134,8 @@ struct ContentView: View {
                         
                         // Houses Section
                         if !viewModel.houses.isEmpty {
-                            Section("Houses (\(viewModel.houses.count))") {
-                                ForEach(viewModel.houses.prefix(10)) { house in
+                            Section("World of GoT - Houses (\(viewModel.houses.count))") {
+                                ForEach(viewModel.houses) { house in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(house.name)
                                             .font(.headline)
@@ -150,7 +157,21 @@ struct ContentView: View {
                                 }
                             }
                         }
+                        
+                        // Image Grid.
+                        if !viewModel.images.isEmpty {
+                            Section("Nature - Images (\(viewModel.images.count))") {
+                                Text("Each AsyncImage fetchs images from the internet resulting in an HTTP request")
+                                    .font(.footnote)
+                                    .fontDesign(.monospaced)
+                                
+                                ImageGridView(images: viewModel.images)
+                                    .frame(height: 600)
+                            }
+                        }
+                        
                     }
+                    .listStyle(.plain)
                 } else {
                     ContentUnavailableView(
                         "No Data",
