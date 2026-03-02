@@ -136,7 +136,7 @@ struct ContentView: View {
                             
                             // Skipped Requests Section
                             if viewModel.skippedRequestCount > 0 {
-                                sectionHeader("Requests skipped from logging. Count: \(viewModel.skippedRequestCount)")
+                                sectionHeader("Requests skipped from logging: \(viewModel.skippedRequestCount)")
                                 CardGridView(items: viewModel.users, cardColor: .mint) { user in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(user.name)
@@ -171,7 +171,7 @@ struct ContentView: View {
                             
                             // Image Grid
                             if !viewModel.images.isEmpty {
-                                sectionHeader("Nature - Images (\(viewModel.images.count))")
+                                sectionHeader("Images using AsyncImage - (\(viewModel.images.count))")
                                 Text("Each AsyncImage fetchs images from the internet resulting in an HTTP request")
                                     .font(.footnote)
                                     .fontDesign(.monospaced)
