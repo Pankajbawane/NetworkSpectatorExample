@@ -71,12 +71,3 @@ struct User: Decodable, Identifiable {
         case name, email
     }
 }
-
-struct Empty: Decodable, Identifiable {
-    let id = UUID()
-    let image: String
-    
-    enum CodingKeys: String, CodingKey {
-        case image
-    }
-}

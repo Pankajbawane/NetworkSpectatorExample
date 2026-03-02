@@ -40,14 +40,27 @@ class ViewModel {
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                let _ :Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
-            }
-            group.addTask {
-                let _:Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "http://covers.openlibrary.org/b/isbn/0385472579-S.jpg")
+                let result: Result<[Character], Error> = await self.makeRequestWithConfiguration(urlString: "https://www.anapioficeandfire.com/api/characters")
+                switch result {
+                case .success(let chars):
+                    await MainActor.run {
+                        self.characters.append(contentsOf: chars)
+                    }
+                case .failure(let error):
+                    print(error)
+                }
             }
             
             group.addTask {
-                let _:Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "http://some.unknown.url/for/intentional/error")
+                let result: Result<[House], Error> = await self.makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/houses")
+                switch result {
+                case .success(let houses):
+                    await MainActor.run {
+                        self.houses.append(contentsOf: houses)
+                    }
+                case .failure(let error):
+                    print(error)
+                }
             }
             
             group.addTask {
@@ -77,27 +90,7 @@ class ViewModel {
             }
             
             group.addTask {
-                let result: Result<[Character], Error> = await self.makeRequestWithConfiguration(urlString: "https://www.anapioficeandfire.com/api/characters")
-                switch result {
-                case .success(let chars):
-                    await MainActor.run {
-                        self.characters.append(contentsOf: chars)
-                    }
-                case .failure(let error):
-                    print(error)
-                }
-            }
-            
-            group.addTask {
-                let result: Result<[House], Error> = await self.makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/houses")
-                switch result {
-                case .success(let houses):
-                    await MainActor.run {
-                        self.houses.append(contentsOf: houses)
-                    }
-                case .failure(let error):
-                    print(error)
-                }
+                await self.makeRawRequest(urlString: "http://some.unknown.url/for/intentional/error")
             }
             
             group.addTask {
@@ -198,6 +191,22 @@ class ViewModel {
                     continuation.resume(returning: .failure(error))
                 }
             }.resume()
+        }
+    }
+    
+    /// Makes a network request with Shared URLSession and decodes the response.
+    /// - Parameter urlString: URL.
+    private func makeRawRequest(urlString: String) async {
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            return
+        }
+        totalRequests += 1
+        let urlRequest = URLRequest(url: url)
+        do {
+            _ = try await URLSession.shared.data(for: urlRequest)
+        } catch {
+            print(error)
         }
     }
 }
