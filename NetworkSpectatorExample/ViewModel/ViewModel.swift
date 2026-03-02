@@ -22,8 +22,9 @@ class ViewModel {
     var isLoading: Bool = false
     var totalRequests: Int = 0
     var images: [ImageItem] = []
+    var users: [User] = []
     var dataReceived: Bool {
-        !characters.isEmpty || !houses.isEmpty || !images.isEmpty || !mockResponses.isEmpty || skippedRequestCount > 0
+        !characters.isEmpty || !houses.isEmpty || !images.isEmpty || !mockResponses.isEmpty || !users.isEmpty
     }
     
     init() {
@@ -39,18 +40,14 @@ class ViewModel {
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
+                let _ :Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
             }
             group.addTask {
-                await self.makeRequestWithDefaultSession(urlString: "http://covers.openlibrary.org/b/isbn/0385472579-S.jpg")
-            }
-            
-            group.addTask {
-                await self.makeRequestWithDefaultSession(urlString: "http://some.unknown.url/for/intentional/error")
+                let _:Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "http://covers.openlibrary.org/b/isbn/0385472579-S.jpg")
             }
             
             group.addTask {
-                await self.makeRequestWithDefaultSession(urlString: "https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json")
+                let _:Result<Empty, Error> = await self.makeRequestWithDefaultSession(urlString: "http://some.unknown.url/for/intentional/error")
             }
             
             group.addTask {
@@ -104,7 +101,15 @@ class ViewModel {
             }
             
             group.addTask {
-                await self.makeRequestWithDefaultSession(urlString: "https://jsonplaceholder.typicode.com/users")
+                let result: Result<[User], Error> = await self.makeRequestWithDefaultSession(urlString: "https://jsonplaceholder.typicode.com/users")
+                switch result {
+                case .success(let users):
+                    await MainActor.run {
+                        self.users.append(contentsOf: users)
+                    }
+                case .failure(let error):
+                    print(error)
+                }
                 await MainActor.run {
                     self.skippedRequestCount += 1
                 }
@@ -155,17 +160,20 @@ class ViewModel {
     
     /// Makes a network request with Shared URLSession and decodes the response.
     /// - Parameter urlString: URL.
-    private func makeRequestWithDefaultSession(urlString: String) async {
+    private func makeRequestWithDefaultSession<T: Decodable>(urlString: String) async -> Result<T, Error> {
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
-            return
+            return .failure(URLError(.badURL))
         }
         totalRequests += 1
         let urlRequest = URLRequest(url: url)
         do {
-            _ = try await URLSession.shared.data(for: urlRequest)
+            let result = try await URLSession.shared.data(for: urlRequest)
+            let decoded = try JSONDecoder().decode(T.self, from: result.0)
+            return .success(decoded)
         } catch {
             print(error)
+            return .failure(error)
         }
     }
     

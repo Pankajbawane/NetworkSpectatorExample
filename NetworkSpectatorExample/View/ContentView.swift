@@ -78,109 +78,123 @@ struct ContentView: View {
                 
                 // Data Display Section
                 if viewModel.dataReceived {
-                    List {
-                        
-                        // Skipped Requests Section
-                        if viewModel.skippedRequestCount > 0 {
-                            Section("Skipped Logging") {
-                                Text("\(viewModel.skippedRequestCount) request(s) called which are skipped from logging")
-                                    .font(.subheadline)
-                                .padding(.vertical, 4)
-                            }
-                        }
-                        
-                        // Mock Responses Section
-                        if !viewModel.mockResponses.isEmpty {
-                            Section("Mock Responses") {
-                                ForEach(viewModel.mockResponses) { mock in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Mock Response")
-                                            .font(.headline)
-                                        
-                                        Text(mock.response)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .padding(.top, 2)
-                                    }
-                                    .padding(.vertical, 2)
-                                }
-                            }
-                        }
-                        
-                        // Characters Section
-                        if !viewModel.characters.isEmpty {
-                            Section("World of GoT - Characters (\(viewModel.characters.count))") {
-                                ForEach(viewModel.characters) { character in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            
+                            // Characters Section
+                            if !viewModel.characters.isEmpty {
+                                sectionHeader("World of GoT - Characters (\(viewModel.characters.count))")
+                                CardGridView(items: viewModel.characters, cardColor: .blue) { character in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(character.displayName)
                                             .font(.headline)
-                                        
                                         if !character.culture.isEmpty {
                                             Text("Culture: \(character.culture)")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .lineLimit(1)
                                         }
-                                        
                                         if !character.titles.isEmpty, let firstTitle = character.titles.first, !firstTitle.isEmpty {
                                             Text(firstTitle)
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .lineLimit(1)
                                         }
                                     }
-                                    .padding(.vertical, 2)
+                                    .padding(10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 }
+
                             }
-                        }
-                        
-                        // Houses Section
-                        if !viewModel.houses.isEmpty {
-                            Section("World of GoT - Houses (\(viewModel.houses.count))") {
-                                ForEach(viewModel.houses) { house in
+                            
+                            // Houses Section
+                            if !viewModel.houses.isEmpty {
+                                sectionHeader("World of GoT - Houses (\(viewModel.houses.count))")
+                                CardGridView(items: viewModel.houses, cardColor: .orange) { house in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(house.name)
                                             .font(.headline)
-                                        
                                         if !house.region.isEmpty {
                                             Text("Region: \(house.region)")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .lineLimit(1)
                                         }
-                                        
                                         if !house.words.isEmpty {
                                             Text("\"\(house.words)\"")
                                                 .font(.caption)
                                                 .italic()
                                                 .foregroundStyle(.secondary)
+                                                .lineLimit(1)
                                         }
                                     }
-                                    .padding(.vertical, 2)
+                                    .padding(10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+
+                            }
+                            
+                            // Skipped Requests Section
+                            if viewModel.skippedRequestCount > 0 {
+                                sectionHeader("Requests skipped from logging. Count: \(viewModel.skippedRequestCount)")
+                                CardGridView(items: viewModel.users, cardColor: .mint) { user in
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(user.name)
+                                            .font(.headline)
+                                            .lineLimit(1)
+                                        Text(user.email)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
+                                    }
+                                    .padding(10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
-                        }
-                        
-                        // Image Grid.
-                        if !viewModel.images.isEmpty {
-                            Section("Nature - Images (\(viewModel.images.count))") {
+                            
+                            // Mock Responses Section
+                            if !viewModel.mockResponses.isEmpty {
+                                sectionHeader("Mock Responses")
+                                CardGridView(items: viewModel.mockResponses, cardColor: .purple) { mock in
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Mock Response")
+                                            .font(.headline)
+                                        Text(mock.response)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
+                                    }
+                                    .padding(10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            
+                            // Image Grid
+                            if !viewModel.images.isEmpty {
+                                sectionHeader("Nature - Images (\(viewModel.images.count))")
                                 Text("Each AsyncImage fetchs images from the internet resulting in an HTTP request")
                                     .font(.footnote)
                                     .fontDesign(.monospaced)
+                                    .padding(.horizontal)
                                 
                                 ImageGridView(images: viewModel.images)
-                                    .frame(height: 600)
+                                    .frame(height: 300)
                             }
                         }
-                        
+                        .padding(.vertical)
                     }
-                    .listStyle(.plain)
                 } else {
                     ContentUnavailableView(
                         "No Data",
                         systemImage: "network.slash",
-                        description: Text("Press 'Call Services' to fetch data")
+                        description: Text("Press 'Fetch Data' to fetch content")
                     )
                 }
             }
             .navigationTitle("NetworkSpectator")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
         #if os(iOS)
         .sheet(isPresented: $showLogs) {
@@ -188,4 +202,13 @@ struct ContentView: View {
         }
         #endif
     }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.title3)
+            .fontWeight(.semibold)
+            .padding(.horizontal)
+    }
+
+
 }

@@ -50,10 +50,33 @@ struct House: Decodable, Identifiable {
 struct MockResponse: Decodable, Identifiable, Sendable {
     let response: String
     
-    var id: String { response }
+    let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case response
+    }
 }
 
 struct ImageItem: Decodable, Identifiable {
     let id: String
     let download_url: String
+}
+
+struct User: Decodable, Identifiable {
+    let id = UUID()
+    let name: String
+    let email: String
+    
+    enum CodingKeys: String, CodingKey {
+        case name, email
+    }
+}
+
+struct Empty: Decodable, Identifiable {
+    let id = UUID()
+    let image: String
+    
+    enum CodingKeys: String, CodingKey {
+        case image
+    }
 }
