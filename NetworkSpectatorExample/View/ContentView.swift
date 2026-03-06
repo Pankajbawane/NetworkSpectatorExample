@@ -69,11 +69,9 @@ struct ContentView: View {
                 HStack {
                     if viewModel.isLoading {
                         ProgressView()
+                            .padding(10)
                     }
-                    Text("HTTP requests count: \(viewModel.totalRequests)")
-                        .font(Font.headline)
                 }
-                .padding(10)
                 Divider()
                 
                 // Data Display Section
@@ -135,8 +133,8 @@ struct ContentView: View {
                             }
                             
                             // Skipped Requests Section
-                            if viewModel.skippedRequestCount > 0 {
-                                sectionHeader("Requests skipped from logging: \(viewModel.skippedRequestCount)")
+                            if !viewModel.users.isEmpty {
+                                sectionHeader("Requests skipped from logging")
                                 CardGridView(items: viewModel.users, cardColor: .mint) { user in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(user.name)

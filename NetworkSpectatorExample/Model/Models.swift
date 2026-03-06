@@ -47,13 +47,20 @@ struct House: Decodable, Identifiable {
     var id: String { url }
 }
 
-struct MockResponse: Decodable, Identifiable, Sendable {
+struct MockResponse: Identifiable, Sendable {
     let response: String
     
     let id = UUID()
     
     enum CodingKeys: String, CodingKey {
         case response
+    }
+}
+
+extension MockResponse: Decodable {
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.response = try container.decode(String.self, forKey: .response)
     }
 }
 
