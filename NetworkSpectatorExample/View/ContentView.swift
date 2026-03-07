@@ -37,7 +37,7 @@ struct ContentView: View {
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.center)
                         
-                        Text("Tap 'Fetch Data' to make HTTP requests. Tap 'Show Logs' to launch NetworkSpectator UI.")
+                        Text("Tap 'Fetch Data' to make HTTP requests. Tap 'Launch NetworkSpectator' to launch NetworkSpectator UI.")
                             .font(.caption2)
                             .fontDesign(.monospaced)
                             .foregroundStyle(.secondary)
@@ -45,34 +45,32 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
-                    HStack {
-                        Button("Fetch Data") {
-                            Task {
-                                await viewModel.callServices()
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        
-                        Button("Show Logs") {
-                            #if os(macOS)
-                            openWindow(id: "NetworkSpectator")
-                            #else
-                            showLogs.toggle()
-                            #endif
-                        }
-                        .buttonStyle(.bordered)
+                    Button("Launch NetworkSpectator") {
+                        #if os(macOS)
+                        openWindow(id: "NetworkSpectator")
+                        #else
+                        showLogs.toggle()
+                        #endif
                     }
+                    .buttonStyle(.bordered)
                 }
                 .padding()
                 
                 Divider()
-                HStack {
+                VStack {
+                    Button("Fetch Data") {
+                        Task {
+                            await viewModel.callServices()
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(10)
+                    
                     if viewModel.isLoading {
                         ProgressView()
                             .padding(10)
                     }
                 }
-                Divider()
                 
                 // Data Display Section
                 if viewModel.dataReceived {
