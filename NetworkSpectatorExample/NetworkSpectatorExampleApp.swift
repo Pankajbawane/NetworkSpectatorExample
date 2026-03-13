@@ -19,7 +19,7 @@ struct NetworkSpectatorExampleApp: App {
         WindowGroup {
             ContentView()
                 .task {
-                    NetworkSpectator.start()
+                    NetworkSpectator.start(onDemand: true)
                 }
         }
         #if os(macOS)
