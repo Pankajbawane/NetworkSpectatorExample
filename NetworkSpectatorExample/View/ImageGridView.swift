@@ -60,7 +60,7 @@ private final class ImageCache {
     private let cache = NSCache<NSString, CGImage>()
     
     private init() {
-        cache.countLimit = 50
+        cache.countLimit = 0
     }
     
     func image(forKey key: String) -> CGImage? {

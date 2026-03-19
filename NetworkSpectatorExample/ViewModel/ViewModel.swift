@@ -30,59 +30,29 @@ class ViewModel {
         registerMock()
     }
     
-    /// Calls HTTP services to  fetch data from servers.
+    /// Calls HTTP services to fetch data from servers.
     func callServices() async {
-        // Call HTTP services to illustrate logging with NetworkSpectator.
         isLoading = true
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                do {
-                    let result: [Character] = try await self.makeRequestWithConfiguration(urlString: "https://www.anapioficeandfire.com/api/characters")
-                    await MainActor.run {
-                        self.characters.append(contentsOf: result)
-                    }
-                } catch { }
+                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/characters") { self.characters = $0 }
             }
-            
             group.addTask {
-                do {
-                    let result: [House] = try await self.makeRequestWithCompletionHandler(urlString: "https://www.anapioficeandfire.com/api/houses")
-                    await MainActor.run {
-                        self.houses.append(contentsOf: result)
-                    }
-                } catch { }
+                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/houses") { self.houses = $0 }
             }
-            
             group.addTask {
-                do {
-                    let result: [ImageItem] = try await self.makeRequestWithConfiguration(urlString: "https://picsum.photos/v2/list?page=2&limit=5")
-                    await MainActor.run {
-                        self.images.append(contentsOf: result)
-                    }
-                } catch { }
+                await self.fetchAndAssign("https://picsum.photos/v2/list?page=2&limit=5") { self.images = $0 }
             }
-            
             group.addTask {
-                do {
-                    let result: MockResponse = try await self.makeRequestWithConfiguration(urlString: "https://mock.example.com/api/mock/1")
-                    await MainActor.run {
-                        self.mockResponses.append(result)
-                    }
-                } catch { }
+                await self.fetchAndAssign("https://mock.example.com/api/mock/1") { self.mockResponses = [$0] }
             }
-            
             group.addTask {
-                _ = try? await self.makeRawRequest(urlString: "http://some.unknown.url/for/intentional/error")
+                // Intentional error request to demonstrate error logging
+                _ = try? await self.fetch(from: "http://some.unknown.url/for/intentional/error") as Data
             }
-            
             group.addTask {
-                do {
-                    let result: [User] = try await self.makeRequestWithDefaultSession(urlString: "https://jsonplaceholder.typicode.com/users")
-                    await MainActor.run {
-                        self.users.append(contentsOf: result)
-                    }
-                } catch { }
+                await self.fetchAndAssign("https://jsonplaceholder.typicode.com/users") { self.users = $0 }
             }
         }
         
@@ -97,93 +67,25 @@ class ViewModel {
     
     /// Example to mock HTTP request.
     func registerMock() {
-        let mockRule = MatchRule.url("https://mock.example.com/api/mock/1")
+        let matchRule = MatchRule.url("https://mock.example.com/api/mock/1")
         do {
-            let mock = try Mock(rule: mockRule, response: ["response": "this is a mock response"], statusCode: 200)
+            let mock = try Mock(rule: matchRule, response: ["response": "this is a mock response"], statusCode: 500)
             NetworkSpectator.registerMock(for: mock)
         } catch {
             print("mock failed")
         }
     }
     
-    /// Makes a network request with custom URLSession Configuration and decodes the response.
-    /// - Parameter urlString: URL.
-    /// - Returns: Response.
-    private func makeRequestWithConfiguration<T: Decodable>(urlString: String) async throws -> T {
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            throw URLError(.badURL)
-        }
-        
-        let urlRequest = URLRequest(url: url)
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
-        do {
-            let result = try await session.data(for: urlRequest)
-            let data = try JSONDecoder().decode(T.self, from: result.0)
-            return data
-        } catch {
-            throw error
-        }
+    /// Fetches, decodes, and assigns the result to a property on the MainActor.
+    private func fetchAndAssign<T: Decodable>(_ urlString: String, assign: @MainActor @Sendable (T) -> Void) async {
+        guard let result: T = try? await fetch(from: urlString) else { return }
+        await MainActor.run { assign(result) }
     }
     
-    /// Makes a network request with Shared URLSession and decodes the response.
-    /// - Parameter urlString: URL.
-    private func makeRequestWithDefaultSession<T: Decodable>(urlString: String) async throws -> T {
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            throw URLError(.badURL)
-        }
-        
-        let urlRequest = URLRequest(url: url)
-        do {
-            let result = try await URLSession.shared.data(for: urlRequest)
-            let decoded = try JSONDecoder().decode(T.self, from: result.0)
-            return decoded
-        } catch {
-            print(error)
-            throw error
-        }
-    }
-    
-    /// Makes a network request with Shared URLSession and Completion Handler and decodes the response.
-    /// - Parameter urlString: URL.
-    /// - Returns: Response.
-    private func makeRequestWithCompletionHandler<T: Decodable>(urlString: String) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            guard let url = URL(string: urlString) else {
-                print("Invalid URL")
-                return continuation.resume(throwing: URLError(.badURL))
-            }
-            
-            let urlRequest = URLRequest(url: url)
-            URLSession.shared.dataTask(with: urlRequest) { data, response, error in
-                
-                guard let data else { return }
-                do {
-                    let decoded = try JSONDecoder().decode(T.self, from: data)
-                    continuation.resume(returning: decoded)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }.resume()
-        }
-    }
-    
-    /// Makes a network request with Shared URLSession and decodes the response.
-    /// - Parameter urlString: URL.
-    private func makeRawRequest(urlString: String) async throws -> Data {
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            throw URLError(.badURL)
-        }
-        
-        let urlRequest = URLRequest(url: url)
-        do {
-            let result = try await URLSession.shared.data(for: urlRequest)
-            return result.0
-        } catch {
-            throw error
-        }
+    /// Makes a network request and decodes the response.
+    private func fetch<T: Decodable>(from urlString: String) async throws -> T {
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+        let (data, _) = try await URLSession.shared.data(for: URLRequest(url: url))
+        return try JSONDecoder().decode(T.self, from: data)
     }
 }
