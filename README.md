@@ -14,14 +14,17 @@ NetworkSpectator - https://github.com/Pankajbawane/NetworkSpectator
   - Initialize and present the NetworkSpectator UI
   - Register mock network responses for testing
   - Skip logging for selected calls
-  - Organize and view captured requests/responses
+  - View captured requests/responses
 
 ## How It Works
 
 - The main view (ContentView) offers two primary actions:
-  - “Call Services”: Triggers sample network calls using a ViewModel to demonstrate how requests and responses are captured by NetworkSpectator.
-  - “Show Logs”: Presents NetworkSpectator’s UI so you can browse, filter, and inspect the logged calls.
+  - “Fetch Data”: Triggers sample network calls using a ViewModel to demonstrate how requests and responses are captured by NetworkSpectator.
+  - “Launch NetworkSpectator”: Presents NetworkSpectator’s UI so you can browse, filter, and inspect the logged calls.
 - On appearance, the app configures the demo environment by optionally skipping certain logs and registering mock responses.
+
+<img width="300" height="652" alt="networkSpectatorApp" src="https://github.com/user-attachments/assets/2d4fd6d9-8da8-4fc3-87b9-eae550bd6d68" />
+
 
 ### Code Highlight
 
@@ -30,14 +33,14 @@ VStack {
     Text("Hello, Network Spectator!")
         .padding(10)
 
-    Button("Call Services") {
+    Button("Fetch Data") {
         Task {
             await viewModel.callServices()
         }
     }
     .padding(10)
 
-    Button("Show Logs") {
+    Button("Launch NetworkSpectator") {
         #if os(macOS)
         openWindow(id: "NetworkSpectator")
         #else
