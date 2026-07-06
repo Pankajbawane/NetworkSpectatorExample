@@ -36,16 +36,16 @@ class ViewModel {
         
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/characters") { self.characters = $0 }
+                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/characters") { self.characters += $0 }
             }
             group.addTask {
-                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/houses") { self.houses = $0 }
+                await self.fetchAndAssign("https://www.anapioficeandfire.com/api/houses") { self.houses += $0 }
             }
             group.addTask {
-                await self.fetchAndAssign("https://picsum.photos/v2/list?page=2&limit=5") { self.images = $0 }
+                await self.fetchAndAssign("https://picsum.photos/v2/list?page=2&limit=5") { self.images += $0 }
             }
             group.addTask {
-                await self.fetchAndAssign("https://mock.example.com/api/mock/1") { self.mockResponses = [$0] }
+                await self.fetchAndAssign("https://mock.example.com/api/mock/1") { self.mockResponses += [$0] }
             }
             group.addTask {
                 // Intentional error request to demonstrate error logging
@@ -62,7 +62,7 @@ class ViewModel {
     /// Example to skip logging HTTP request.
     func skipLogging() {
         let rule = MatchRule.url("https://jsonplaceholder.typicode.com/users")
-        NetworkSpectator.ignoreLogging(for: rule)
+        NetworkSpectator.excludeFromLogging(for: .init(method: .GET, rule: rule))
     }
     
     /// Example to mock HTTP request.
